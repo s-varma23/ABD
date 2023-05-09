@@ -1,0 +1,47 @@
+version: "3.9"
+services:
+  nuoadmin1:
+    image: nuodb/nuodb-ce:latest
+    container_name: nuoadmin1
+    hostname: nuoadmin1
+    volumes:
+      - nuoadmin-raft-1:/var/opt/nuodb
+      - nuoadmin-raft-1:/var/opt/nuodb/archive
+    ports:
+      - "8888:8888"
+    environment:
+      NUODB_DOMAIN_ENTRYPOINT: nuoadmin1
+    networks:
+      - nuodb-net
+    command: nuoadmin
+
+
+  test-sm-1:
+    image: nuodb/nuodb-ce:latest
+    container_name: test-sm-1
+    hostname: test-sm-1
+    volumes:
+      - test-arch-vol-1:/var/opt/nuodb
+      - test-arch-vol-1:/var/opt/nuodb/archive
+    networks:
+      - nuodb-net
+    command: nuodocker --api-server nuoadmin1:8888 start sm --db-name test --server-id nuoadmin1 --dba-user dba --dba-password goalie
+
+  test-te-1:
+    image: nuodb/nuodb-ce:latest
+    container_name: test-te-1
+    hostname: test-te-1
+    networks:
+    - nuodb-net
+    command: nuodocker --api-server nuoadmin1:8888 start te --db-name test --server-id nuoadmin1
+
+networks:
+  nuodb-net:
+      name: local
+      driver: bridge
+
+volumes:
+  nuoadmin-raft-1: 
+    driver: local
+  test-arch-vol-1:
+    driver: local
